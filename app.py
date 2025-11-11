@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+import base64
 
 # ===========================
 # Page Setup
@@ -19,7 +20,7 @@ st.markdown("Enter your own OpenAI API Key to chat and generate images! 🎨")
 user_api_key = st.text_input(
     "Enter your OpenAI API Key:", 
     type="password",
-    help="Your own OpenAI API Key will be used for this session only."
+    help="Your OpenAI API Key will only be used for this session."
 )
 
 # ===========================
@@ -28,8 +29,8 @@ user_api_key = st.text_input(
 roles = {
     "Film Critic": "You are a sharp and insightful film critic with expertise in film analysis and visual storytelling.",
     "Fashion Consultant": "You are an energetic fashion consultant giving trendy and personalized style advice.",
-    "Dance Coach": "You are a professional dance coach, giving detailed guidance on rhythm, moves, and stage performance.",
-    "Digital Artist": "You are a digital artist, providing vivid, imaginative prompts for visual art and image creation.",
+    "Dance Coach": "You are a professional dance coach giving detailed guidance on rhythm, moves, and stage performance.",
+    "Digital Artist": "You are a digital artist providing vivid, imaginative prompts for visual art and image creation.",
     "Creative Writing Mentor": "You are a creative writing mentor helping craft emotional, vivid, and expressive writing."
 }
 
@@ -44,6 +45,7 @@ enable_image = st.sidebar.checkbox("Enable Image Generation")
 # Chat Section
 # ===========================
 st.subheader(f"💬 Chat with {role}")
+
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -99,12 +101,17 @@ if st.button("Generate Image"):
             client = OpenAI(api_key=user_api_key)
             with st.spinner("Generating image..."):
                 result = client.images.generate(
-                    model="gpt-image-1",  # 或 "dall-e-3" 根据账户权限
+                    model="gpt-image-1",  # or "dall-e-3" if supported
                     prompt=image_prompt,
                     size="1024x1024"
                 )
-                image_url = result.data[0].url
-                st.image(image_url, caption="🎨 AI-generated image", use_container_width=True)
+
+                # ✅ Decode base64 image data
+                image_base64 = result.data[0].b64_json
+                image_bytes = base64.b64decode(image_base64)
+
+                # ✅ Display image
+                st.image(image_bytes, caption="🎨 AI-generated image", use_container_width=True)
         except Exception as e:
             st.error(f"Image generation failed: {e}\n(Make sure your API Key supports image generation)")
 
