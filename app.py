@@ -55,20 +55,22 @@ if st.button("Send Message"):
     elif not user_input.strip():
         st.warning("Please enter a message to send!")
     else:
-        # Initialize OpenAI client with user's key
-        client = OpenAI(api_key=user_api_key)
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        try:
+            client = OpenAI(api_key=user_api_key)
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-        with st.spinner("Thinking..."):
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": role_prompt},
-                    *st.session_state.chat_history
-                ]
-            )
-            ai_reply = response.choices[0].message.content
-            st.session_state.chat_history.append({"role": "assistant", "content": ai_reply})
+            with st.spinner("Thinking..."):
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": role_prompt},
+                        *st.session_state.chat_history
+                    ]
+                )
+                ai_reply = response.choices[0].message.content
+                st.session_state.chat_history.append({"role": "assistant", "content": ai_reply})
+        except Exception as e:
+            st.error(f"Chat failed: {e}")
 
 # Display chat history
 for chat in st.session_state.chat_history:
@@ -93,18 +95,22 @@ if st.button("Generate Image"):
     elif image_prompt.strip() == "":
         st.warning("Please enter an image prompt!")
     elif enable_image:
-        client = OpenAI(api_key=user_api_key)
-        with st.spinner("Generating image..."):
-            result = client.images.generate(
-                model="gpt-image-1",
-                prompt=image_prompt,
-                size="1024x1024"
-            )
-            image_url = result.data[0].url
-            st.image(image_url, caption="🎨 AI-generated image", use_container_width=True)
+        try:
+            client = OpenAI(api_key=user_api_key)
+            with st.spinner("Generating image..."):
+                result = client.images.generate(
+                    model="gpt-image-1",  # 或 "dall-e-3" 根据账户权限
+                    prompt=image_prompt,
+                    size="1024x1024"
+                )
+                image_url = result.data[0].url
+                st.image(image_url, caption="🎨 AI-generated image", use_container_width=True)
+        except Exception as e:
+            st.error(f"Image generation failed: {e}\n(Make sure your API Key supports image generation)")
 
 # ===========================
 # Footer
 # ===========================
 st.markdown("---")
 st.caption("Created with ❤️ · Each user uses their own OpenAI API Key · Powered by OpenAI & Streamlit")
+
