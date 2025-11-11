@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
 # ===========================
 # Page Setup
@@ -55,19 +55,19 @@ if st.button("Send Message"):
     elif not user_input.strip():
         st.warning("Please enter a message to send!")
     else:
-        # Set user's OpenAI Key
-        openai.api_key = user_api_key
+        # Initialize OpenAI client with user's key
+        client = OpenAI(api_key=user_api_key)
         st.session_state.chat_history.append({"role": "user", "content": user_input})
 
         with st.spinner("Thinking..."):
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": role_prompt},
                     *st.session_state.chat_history
                 ]
             )
-            ai_reply = response["choices"][0]["message"]["content"]
+            ai_reply = response.choices[0].message.content
             st.session_state.chat_history.append({"role": "assistant", "content": ai_reply})
 
 # Display chat history
@@ -93,14 +93,14 @@ if st.button("Generate Image"):
     elif image_prompt.strip() == "":
         st.warning("Please enter an image prompt!")
     elif enable_image:
-        openai.api_key = user_api_key
+        client = OpenAI(api_key=user_api_key)
         with st.spinner("Generating image..."):
-            result = openai.Image.create(
+            result = client.images.generate(
                 model="gpt-image-1",
                 prompt=image_prompt,
                 size="1024x1024"
             )
-            image_url = result["data"][0]["url"]
+            image_url = result.data[0].url
             st.image(image_url, caption="🎨 AI-generated image", use_container_width=True)
 
 # ===========================
